@@ -14,6 +14,7 @@ generate-keys:
 	mkdir -p src/backend/certs
 	openssl genrsa -out src/backend/certs/private.pem 2048
 	openssl rsa -in src/backend/certs/private.pem -outform PEM -pubout -out src/backend/certs/public.pem
+	cd src/backend && uv lock
 
 build:
 	eval $$(minikube docker-env) && docker build -t $(IMAGE_NAME):$(TAG) ./src/backend
