@@ -1,0 +1,67 @@
+name: bot-ferme
+
+services:
+  pg:
+    image: postgres:16-alpine
+    container_name: bot_ferme_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init_db:/docker-entrypoint-initdb.d
+    networks:
+      - bot-net
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+      target: backend
+    env_file:
+      - .env
+    environment:
+      - DB__URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}
+    depends_on:
+      pg:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/backend:/backend
+    networks:
+      - bot-net
+
+  migrations:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+      target: migrations
+    env_file:
+      - .env
+    environment:
+      - DB__URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5432/${POSTGRES_DB}
+    depends_on:
+      pg:
+        condition: service_healthy
+    networks:
+      - bot-net
+    restart: "no"
+    command: >
+      sh -c "until nc -z pg 5432; do echo 'Waiting for postgres...'; sleep 1; done;
+             alembic upgrade head &&
+             echo 'Migrations applied successfully!'"
+
+volumes:
+  pgdata:
+
+networks:
+  bot-net:

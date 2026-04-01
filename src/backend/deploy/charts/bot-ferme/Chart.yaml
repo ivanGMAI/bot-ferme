@@ -1,0 +1,4 @@
+apiVersion: v2
+name: bot-ferme
+version: 0.1.0
+type: application

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-ferme
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bot-ferme
+  template:
+    metadata:
+      labels:
+        app: bot-ferme
+    spec:
+      containers:
+        - name: backend
+          image: "bot-ferme-backend:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+          startupProbe:
+            httpGet:
+              path: /api/v1/health/startup
+              port: 8000
+            failureThreshold: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health/liveness
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 15
+
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/readiness
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          env:
+            - name: RUN__HOST
+              value: "0.0.0.0"
+            - name: RUN__PORT
+              value: "8000"
+            - name: DB__URL
+              value: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme"
+            - name: DB__URL_TEST
+              value: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme_test"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bot-ferme-backend-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: bot-ferme

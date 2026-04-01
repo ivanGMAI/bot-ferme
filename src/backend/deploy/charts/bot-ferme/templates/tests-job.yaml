@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bot-ferme.fullname" . }}-tests
+  labels:
+    {{- include "bot-ferme.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    metadata:
+      labels:
+        app: bot-ferme-tests
+    spec:
+      initContainers:
+        - name: wait-db
+          image: busybox:latest
+          command: ['sh', '-c', 'until nc -z bot-ferme-db 5432; do echo "waiting for db..."; sleep 2; done']
+        - name: create-test-db
+          image: postgres:16-alpine
+          env:
+            - name: PGPASSWORD
+              value: "pass"
+          command:
+            - sh
+            - -c
+            - |
+              EXISTS=$(psql -h bot-ferme-db -U user -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='bot_ferme_test'")
+              if [ "$EXISTS" != "1" ]; then
+                psql -h bot-ferme-db -U user -d postgres -c "CREATE DATABASE bot_ferme_test"
+              fi
+      containers:
+        - name: pytest
+          image: "bot-ferme-backend:latest"
+          imagePullPolicy: IfNotPresent
+          command: ["uv", "run", "pytest"]
+          env:
+            - name: RUN__HOST
+              value: "0.0.0.0"
+            - name: RUN__PORT
+              value: "8000"
+            - name: DB__URL
+              value: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme_test"
+            - name: DB__URL_TEST
+              value: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme_test"
+            - name: DB__ECHO
+              value: "false"
+      restartPolicy: Never
+  backoffLimit: 0

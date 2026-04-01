@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "bot-ferme.fullname" . }}-migrations
+  labels:
+    {{- include "bot-ferme.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: wait-db
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - "until nc -z bot-ferme-db 5432; do echo 'Waiting for DB...'; sleep 2; done"
+      containers:
+        - name: migrations
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - "alembic upgrade head"
+          env:
+            - name: DB__URL
+              value: {{ .Values.env.DB__URL | quote }}
+            - name: DB__URL_TEST
+              value: {{ .Values.env.DB__URL_TEST | quote }}
+            - name: RUN__HOST
+              value: {{ .Values.env.RUN__HOST | quote }}
+            - name: RUN__PORT
+              value: {{ .Values.env.RUN__PORT | quote }}
+      restartPolicy: OnFailure
+  backoffLimit: 4

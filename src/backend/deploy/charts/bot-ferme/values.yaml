@@ -1,0 +1,17 @@
+replicaCount: 1
+
+image:
+  repository: bot-ferme-backend
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+env:
+  RUN__HOST: "0.0.0.0"
+  RUN__PORT: "8000"
+  DB__URL: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme"
+  DB__URL_TEST: "postgresql+asyncpg://user:pass@bot-ferme-db:5432/bot_ferme_test"
+  DB__ECHO: "false"
+
+service:
+  type: ClusterIP
+  port: 8000
