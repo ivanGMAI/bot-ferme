@@ -18,14 +18,11 @@ RESTful-сервис на Python для управления пулом тест
 
 ## 🔐 Подготовка SSH/JWT ключей
 
-Для работы JWT-авторизации необходимо сгенерировать пару RSA-ключей:
+Для работы JWT-авторизации необходимо сгенерировать пару RSA-ключей. В проекте предусмотрена Makefile-команда:
 
 ```bash
-mkdir -p src/backend/certs
-openssl genrsa -out src/backend/certs/private.pem 2048
-openssl rsa -in src/backend/certs/private.pem -outform PEM -pubout -out src/backend/certs/public.pem
+make generate-keys
 ```
-
 
 ---
 
@@ -38,12 +35,17 @@ openssl rsa -in src/backend/certs/private.pem -outform PEM -pubout -out src/back
    minikube start
    ```
 
-2. **Разверните проект одной командой:**
+2. **Сгенерируйте JWT-ключи:**
+   ```bash
+   make generate-keys
+   ```
+
+3. **Разверните проект одной командой:**
    ```bash
    make install
    ```
 
-3. **Запустите доступ к API:**
+4. **Запустите доступ к API:**
    ```bash
    make up
    ```
@@ -71,6 +73,20 @@ openssl rsa -in src/backend/certs/private.pem -outform PEM -pubout -out src/back
 cd src/backend
 uv run pytest
 ```
+
+---
+
+## 📋 Доступные Makefile команды
+
+| Команда | Назначение |
+| :--- | :--- |
+| `make help` | Показать список всех доступных команд |
+| `make ping` | Проверка работоспособности Makefile |
+| `make generate-keys` | Генерация RSA-ключей для JWT |
+| `make build` | Сборка Docker образа в Minikube |
+| `make install` | Установка/обновление Helm-чарта |
+| `make dev` | Проброс порта для локальной разработки |
+| `make down` | Остановка Docker Compose |
 
 ---
 
