@@ -1,6 +1,5 @@
 **/certs/*.pem
 .env
-.env.*
 
 **/__pycache__/
 **/*.py[cod]

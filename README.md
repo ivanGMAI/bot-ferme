@@ -14,6 +14,21 @@ RESTful-сервис на Python для управления пулом тест
 * **Infra:** Docker, Kubernetes (Minikube), Helm.
 * **DevOps:** Makefile, `uv`.
 
+---
+
+## 🔐 Подготовка SSH/JWT ключей
+
+Для работы JWT-авторизации необходимо сгенерировать пару RSA-ключей:
+
+```bash
+mkdir -p src/backend/certs
+openssl genrsa -out src/backend/certs/private.pem 2048
+openssl rsa -in src/backend/certs/private.pem -outform PEM -pubout -out src/backend/certs/public.pem
+```
+
+
+---
+
 ## ⚡️ Быстрый старт (Automation)
 
 Все ключевые операции по развертыванию автоматизированы через **Makefile**.
@@ -21,7 +36,7 @@ RESTful-сервис на Python для управления пулом тест
 1. **Подготовьте окружение:**
    ```bash
    minikube start
-   
+   ```
 
 2. **Разверните проект одной командой:**
    ```bash
@@ -34,6 +49,8 @@ RESTful-сервис на Python для управления пулом тест
    ```
    Swagger UI будет доступен по адресу: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
+---
+
 ## 🔍 Управление и диагностика
 
 | Команда | Назначение |
@@ -45,14 +62,17 @@ RESTful-сервис на Python для управления пулом тест
 | `make stop` | Принудительная очистка порта 8000 |
 | `make uninstall` | Полное удаление приложения из кластера |
 
+---
+
 ## 🧪 Локальное тестирование
+
 Для запуска тестов вне кластера:
 ```bash
 cd src/backend
 uv run pytest
 ```
 
+---
+
 ## 👤 Автор
 * **Ivan Gerasimov** — Backend Developer
-```
-
